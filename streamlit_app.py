@@ -1,3 +1,7 @@
+# ============================================================
+# IMPORTS & PAGE CONFIG
+# ============================================================
+
 import streamlit as st
 import pandas as pd
 import altair as alt
@@ -8,6 +12,10 @@ st.set_page_config(
     layout="wide"
 )
 
+# ============================================================
+# DATA LOADING
+# ============================================================
+
 # @st.cache_data prevents re-loading the CSV on every interaction
 @st.cache_data
 def load_data():
@@ -15,6 +23,10 @@ def load_data():
     return df
 
 df = load_data()
+
+# ============================================================
+# ADD GEOGRAPHIC GROUP COLUMN
+# ============================================================
 
 # Maps Region_Standardized → broader continent-level group
 region_groups = {
@@ -45,6 +57,10 @@ def assign_group(region):
 
 df["Geographic_Group"] = df["Region_Standardized"].apply(assign_group)
 
+# ============================================================
+# COLOR PALETTE
+# ============================================================
+
 # Consistent with EDA notebook colors
 COLOR_PALETTE = {
     "Africa":                    "#E15759",
@@ -55,6 +71,10 @@ COLOR_PALETTE = {
     "Oceania":                   "#B07AA1",
     "Global Average":            "#534AB7",
 }
+
+# ============================================================
+# SIDEBAR - FILTERS
+# ============================================================
 
 with st.sidebar:
     st.title("Filters")
@@ -86,6 +106,10 @@ with st.sidebar:
         placeholder="All countries"
     )
 
+# ============================================================
+# TITLE & YEAR SLIDER
+# ============================================================
+
 st.title("How Has Happiness Changed Over Time?")
 st.markdown("World Happiness Report · 2015 – 2024")
 st.divider()
@@ -106,6 +130,10 @@ df_filtered = df[df["Year"].between(year_range[0], year_range[1])]
 
 # Flag: nothing selected in sidebar
 nothing_selected = (len(selected_regions) == 0) and (len(selected_countries) == 0)
+
+# ============================================================
+# HELPER - GLOBAL AVERAGE BASELINE
+# ============================================================
 
 # Returns a faint dashed line + label for the global average
 # Reused in Case 2, 3, 4 as a background reference
@@ -149,6 +177,9 @@ def make_global_baseline(df_filtered):
 
     return line, label
 
+# ============================================================
+# LAYER 1 - GLOBAL AVERAGE ONLY (DEFAULT)
+# ============================================================
 
 # Shows when nothing is selected in the sidebar
 if nothing_selected:
@@ -182,6 +213,10 @@ if nothing_selected:
     )
 
     chart = alt.layer(line, label).properties(width="container", height=450)
+
+# ============================================================
+# LAYER 2 - REGIONS ONLY
+# ============================================================
 
 elif len(selected_regions) > 0 and len(selected_countries) == 0:
 
@@ -222,37 +257,9 @@ elif len(selected_regions) > 0 and len(selected_countries) == 0:
         .properties(width="container", height=450)
     )
 
-elif len(selected_regions) == 0 and len(selected_countries) > 0:
-
-    global_line, global_label = make_global_baseline(df_filtered)
-
-    df_country = (
-        df_filtered[df_filtered["Country_Standardized"].isin(selected_countries)]
-        .rename(columns={"Happiness score": "Avg Score"})
-    )
-
-    country_line = (
-        alt.Chart(df_country)
-        .mark_line(strokeWidth=2, point=True)
-        .encode(
-            x=alt.X("Year:O", title="Year"),
-            y=alt.Y("Avg Score:Q", title="Average Happiness Score",
-                     scale=alt.Scale(domain=[0, 10])),
-            # Only selected countries appear in legend
-            color=alt.Color("Country_Standardized:N", title="Country"),
-            tooltip=[
-                alt.Tooltip("Year:O", title="Year"),
-                alt.Tooltip("Country_Standardized:N", title="Country"),
-                alt.Tooltip("Geographic_Group:N", title="Region"),
-                alt.Tooltip("Avg Score:Q", title="Score", format=".2f")
-            ]
-        )
-    )
-
-    chart = (
-        alt.layer(global_line, global_label, country_line)
-        .properties(width="container", height=450)
-    )
+# ============================================================
+# LAYER 3 - COUNTRIES ONLY
+# ============================================================
 
 elif len(selected_regions) == 0 and len(selected_countries) > 0:
 
@@ -285,6 +292,42 @@ elif len(selected_regions) == 0 and len(selected_countries) > 0:
         alt.layer(global_line, global_label, country_line)
         .properties(width="container", height=450)
     )
+
+elif len(selected_regions) == 0 and len(selected_countries) > 0:
+
+    global_line, global_label = make_global_baseline(df_filtered)
+
+    df_country = (
+        df_filtered[df_filtered["Country_Standardized"].isin(selected_countries)]
+        .rename(columns={"Happiness score": "Avg Score"})
+    )
+
+    country_line = (
+        alt.Chart(df_country)
+        .mark_line(strokeWidth=2, point=True)
+        .encode(
+            x=alt.X("Year:O", title="Year"),
+            y=alt.Y("Avg Score:Q", title="Average Happiness Score",
+                     scale=alt.Scale(domain=[0, 10])),
+            # Only selected countries appear in legend
+            color=alt.Color("Country_Standardized:N", title="Country"),
+            tooltip=[
+                alt.Tooltip("Year:O", title="Year"),
+                alt.Tooltip("Country_Standardized:N", title="Country"),
+                alt.Tooltip("Geographic_Group:N", title="Region"),
+                alt.Tooltip("Avg Score:Q", title="Score", format=".2f")
+            ]
+        )
+    )
+
+    chart = (
+        alt.layer(global_line, global_label, country_line)
+        .properties(width="container", height=450)
+    )
+
+# ============================================================
+# LAYER 4 - BOTH REGIONS & COUNTRIES
+# ============================================================
 
 else:
 
@@ -351,6 +394,10 @@ else:
         alt.layer(global_line, global_label, region_line, country_line)
         .properties(width="container", height=450)
     )
+
+# ============================================================
+# RENDER TIME TREND CHART
+# ============================================================
 
 # Render chart
 st.altair_chart(
