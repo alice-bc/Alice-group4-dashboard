@@ -10,7 +10,6 @@ An interactive Streamlit dashboard exploring how happiness scores have changed o
 - Filter by **geographic group** and/or **country** in the sidebar to compare specific regions or countries
 - Selecting a filter switches the view from the global average to the selected lines only
 - Adjust the **year range** with the slider in the main area
-- Summary cards at the bottom update automatically based on the current filter state
 
 ---
 
@@ -18,7 +17,7 @@ An interactive Streamlit dashboard exploring how happiness scores have changed o
 
 ```
 📦 project/
-├── happiness_dashboard.py           # Streamlit dashboard (this file)
+├── streamlit_app.py           # Streamlit dashboard (this file)
 ├── happiness_report_standardized.csv  # Cleaned dataset (from cleaning notebook)
 ├── requirements.txt
 └── README.md
@@ -35,31 +34,23 @@ git clone <repo-url>
 cd <project-folder>
 ```
 
-**2. (Optional) Create a virtual environment**
-
-```bash
-python -m venv venv
-source venv/bin/activate      # Mac/Linux
-venv\Scripts\activate         # Windows
-```
-
-**3. Install dependencies**
+**2. Install dependencies**
 
 ```bash
 pip install -r requirements.txt
 ```
 
-**4. Make sure the dataset is in the same folder as the dashboard**
+**3. Make sure the dataset is in the same folder as the dashboard**
 
 ```
 happiness_report_standardized.csv   ← output from 1_world_happiness_cleaning.ipynb
-happiness_dashboard.py
+streamlit_app.py
 ```
 
 **5. Run the dashboard**
 
 ```bash
-streamlit run happiness_dashboard.py
+streamlit run streamlit_app.py
 ```
 
 The dashboard will open automatically at `http://localhost:8501`.
